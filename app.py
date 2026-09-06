@@ -28,7 +28,7 @@ st.sidebar.markdown("**Key Drivers:** Sulfate, pH")
 
 @st.cache_resource
 def load_and_train():
-    url = "https://raw.githubusercontent.com/MainakRepositor/Datasets/master/Water%20Quality/water_potability.csv"
+    url = "https://raw.githubusercontent.com/kirankumariq201/aquasignal/main/water_potability.csv"
     df = pd.read_csv(url)
     df['ph'] = df['ph'].fillna(df['ph'].median())
     df['Sulfate'] = df['Sulfate'].fillna(df['Sulfate'].median())
