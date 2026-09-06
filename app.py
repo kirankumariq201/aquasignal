@@ -140,29 +140,57 @@ if st.button("🔍 Analyze Water Safety"):
     st.markdown("*Which parameters influenced this result the most:*")
 
     with st.spinner("Generating explanation..."):
-        explainer = shap.TreeExplainer(model)
-        shap_values = explainer.shap_values(input_df)
+        try:
+            explainer = shap.TreeExplainer(model)
+            shap_values = explainer.shap_values(input_df)
 
-        fig, ax = plt.subplots(figsize=(8, 4))
-        shap_vals = shap_values[1][0] if isinstance(
-            shap_values, list) else shap_values[0]
+            # Handle different SHAP output formats safely
+            if isinstance(shap_values, list):
+                shap_vals = np.array(shap_values[1][0])
+            else:
+                shap_vals = np.array(shap_values[0])
 
-        colors = ['#ff4444' if v < 0 else '#44bb44'
-                  for v in shap_vals]
+            fig, ax = plt.subplots(figsize=(8, 4))
+            colors = ['#ff4444' if float(v) < 0 else '#44bb44'
+                      for v in shap_vals]
 
-        ax.barh(feature_names, shap_vals, color=colors)
-        ax.axvline(x=0, color='white', linewidth=0.8)
-        ax.set_xlabel("Impact on Safety Score")
-        ax.set_title("Green = Safer | Red = Riskier")
-        ax.set_facecolor('#0e1117')
-        fig.patch.set_facecolor('#0e1117')
-        ax.tick_params(colors='white')
-        ax.xaxis.label.set_color('white')
-        ax.title.set_color('white')
-        plt.tight_layout()
-        st.pyplot(fig)
-        plt.close()
+            ax.barh(feature_names, shap_vals.tolist(), color=colors)
+            ax.axvline(x=0, color='white', linewidth=0.8)
+            ax.set_xlabel("Impact on Safety Score")
+            ax.set_title("Green = Safer | Red = Riskier")
+            ax.set_facecolor('#0e1117')
+            fig.patch.set_facecolor('#0e1117')
+            ax.tick_params(colors='white')
+            ax.xaxis.label.set_color('white')
+            ax.title.set_color('white')
+            plt.tight_layout()
+            st.pyplot(fig)
+            plt.close()
 
+        except Exception as e:
+            # Fallback — show feature importance instead
+            st.markdown("**Feature Importance (impact on predictions):**")
+            importance = pd.DataFrame({
+                'Parameter': feature_names,
+                'Importance': model.feature_importances_
+            }).sort_values('Importance', ascending=True)
+
+            fig, ax = plt.subplots(figsize=(8, 4))
+            colors = ['#44bb44' if v > importance['Importance'].mean()
+                      else '#ff4444'
+                      for v in importance['Importance']]
+            ax.barh(importance['Parameter'],
+                    importance['Importance'], color=colors)
+            ax.set_xlabel("Importance Score")
+            ax.set_title("Parameter Importance — Green = High Impact")
+            ax.set_facecolor('#0e1117')
+            fig.patch.set_facecolor('#0e1117')
+            ax.tick_params(colors='white')
+            ax.xaxis.label.set_color('white')
+            ax.title.set_color('white')
+            plt.tight_layout()
+            st.pyplot(fig)
+            plt.close()
 st.markdown("---")
 st.markdown(
     "Built with ❤️ by KIRAN KUMAR| SAVE WATER💧,SAVE LIFE🌍"
