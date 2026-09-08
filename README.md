@@ -27,7 +27,7 @@ Contact: kirankumar1116t@gmail.com
 # aquasignal
 AI-powered water quality risk predictor — explains why water is unsafe, tracks global trends, and gives actionable insights for anyone on Earth.
 
-# 💧 AquaSignal
+# 💧 AquaSignalv3
 
 AquaSignal is an explainable AI platform that predicts water safety risk 
 using real-world physicochemical parameters. Unlike basic safe/unsafe 
