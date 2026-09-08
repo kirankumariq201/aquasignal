@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AquaSignal — Global Water Safety Predictor</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #0a0e1a;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+        #intro {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .globe {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%,
+                #1a6eb5, #0a3d6b, #041d35);
+            box-shadow: 0 0 60px rgba(30,120,255,0.4),
+                inset -20px -20px 40px rgba(0,0,0,0.5);
+            animation: rotatePulse 4s ease-in-out infinite;
+            position: relative;
+            margin-bottom: 30px;
+        }
+        .globe::before {
+            content: '';
+            position: absolute;
+            top: 20%; left: 10%;
+            width: 80%; height: 60%;
+            border-radius: 50%;
+            border: 2px solid rgba(100,180,255,0.3);
+            transform: rotateX(60deg);
+            animation: spinRing 6s linear infinite;
+        }
+        .globe::after {
+            content: '💧';
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%,-50%);
+            font-size: 60px;
+            animation: dropPulse 2s ease-in-out infinite;
+        }
+        @keyframes rotatePulse {
+            0%,100% { transform: scale(1); box-shadow: 0 0 60px rgba(30,120,255,0.4); }
+            50% { transform: scale(1.05); box-shadow: 0 0 90px rgba(30,120,255,0.7); }
+        }
+        @keyframes spinRing {
+            from { transform: rotateX(60deg) rotateZ(0deg); }
+            to { transform: rotateX(60deg) rotateZ(360deg); }
+        }
+        @keyframes dropPulse {
+            0%,100% { transform: translate(-50%,-50%) scale(1); }
+            50% { transform: translate(-50%,-60%) scale(1.1); }
+        }
+        #intro h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #4fc3f7, #ffffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+        }
+        #intro p {
+            color: #7ecfff;
+            margin-top: 12px;
+            font-size: 1rem;
+            text-align: center;
+            padding: 0 20px;
+        }
+        .scroll-btn {
+            margin-top: 40px;
+            padding: 14px 36px;
+            background: linear-gradient(135deg, #1a6eb5, #4fc3f7);
+            border: none;
+            border-radius: 50px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            animation: bounceBtn 2s ease-in-out infinite;
+            box-shadow: 0 4px 20px rgba(79,195,247,0.4);
+        }
+        @keyframes bounceBtn {
+            0%,100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+#water-transition {
+            position: relative;
+            height: 200px;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #0a0e1a, #041d35);
+        }
+        .water-wave {
+            position: absolute;
+            width: 200%; height: 100%;
+            top: 0; left: -50%;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 200'%3E%3Cpath fill='%231a6eb5' fill-opacity='0.4' d='M0,100 C360,200 720,0 1080,100 C1260,150 1350,80 1440,100 L1440,200 L0,200 Z'/%3E%3C/svg%3E") repeat-x;
+            animation: waveFlow 4s linear infinite;
+        }
+        .water-wave:nth-child(2) {
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 200'%3E%3Cpath fill='%234fc3f7' fill-opacity='0.3' d='M0,80 C400,160 800,20 1200,90 C1320,120 1380,60 1440,80 L1440,200 L0,200 Z'/%3E%3C/svg%3E") repeat-x;
+            animation: waveFlow 6s linear infinite reverse;
+        }
+        @keyframes waveFlow {
+            from { transform: translateX(0); }
+            to { transform: translateX(50%); }
+        }
+        .wave-text {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%,-50%);
+            font-size: 1rem;
+            color: #7ecfff;
+            text-align: center;
+            z-index: 2;
+        }
+        #app {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        .section-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #4fc3f7;
+            margin: 40px 0 20px;
+            border-left: 4px solid #4fc3f7;
+            padding-left: 12px;
+        }
+        .param-card {
+            background: #0d1929;
+            border: 1px solid #1a3a5c;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: border-color 0.3s;
+        }
+        .param-card:hover { border-color: #4fc3f7; }
+        .param-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .param-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #cce8ff;
+        }
+        .safe-range {
+            font-size: 0.75rem;
+            color: #4fc3f7;
+            background: rgba(79,195,247,0.1);
+            padding: 3px 8px;
+            border-radius: 20px;
+        }
+        .slider-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        input[type="range"] {
+            flex: 1;
+            -webkit-appearance: none;
+            height: 6px;
+            border-radius: 3px;
+            background: #1a3a5c;
+            outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1a6eb5, #4fc3f7);
+            cursor: pointer;
+            box-shadow: 0 0 8px rgba(79,195,247,0.5);
+        }
+        input[type="number"] {
+            width: 80px;
+            padding: 6px 10px;
+            background: #0a1628;
+            border: 1px solid #1a3a5c;
+            border-radius: 8px;
+            color: #4fc3f7;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #4fc3f7;
+        }
+        .param-status {
+            margin-top: 8px;
+            font-size: 0.8rem;
+            height: 20px;
+        }
+        .ref-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        .ref-table th {
+            background: #0d1929;
+            color: #4fc3f7;
+            padding: 10px;
+            text-align: left;
+            font-size: 0.85rem;
+        }
+        .ref-table td {
+            padding: 10px;
+            border-bottom: 1px solid #1a3a5c;
+            font-size: 0.85rem;
+            color: #cce8ff;
+        }
+        #analyze-btn {
+            width: 100%;
+            padding: 18px;
+            margin-top: 30px;
+            background: linear-gradient(135deg, #1a6eb5, #4fc3f7);
+            border: none;
+            border-radius: 16px;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(79,195,247,0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        #analyze-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(79,195,247,0.5);
+        }
+#results-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(4,13,25,0.85);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 9999;
+            overflow-y: auto;
+            padding: 40px 16px;
+        }
+        .modal-container {
+            max-width: 850px;
+            margin: 0 auto;
+            background: #0a1424;
+            border: 1px solid #1a3a5c;
+            border-radius: 24px;
+            padding: 36px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8),
+                0 0 30px rgba(79,195,247,0.2);
+            position: relative;
+            animation: modalScaleIn 0.3s cubic-bezier(0.16,1,0.3,1);
+        }
+        .modal-close-btn {
+            position: absolute;
+            top: 20px; right: 24px;
+            background: #0d1929;
+            border: 1px solid #1a3a5c;
+            color: #7ecfff;
+            width: 38px; height: 38px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .modal-close-btn:hover {
+            background: #e74c3c;
+            color: white;
+            border-color: #e74c3c;
+        }
+        @keyframes modalScaleIn {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .result-card {
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 24px;
+            animation: fadeInUp 0.5s ease;
+        }
+        .result-safe {
+            background: linear-gradient(135deg, #0d2b1a, #0a3d20);
+            border: 2px solid #2ecc71;
+        }
+        .result-unsafe {
+            background: linear-gradient(135deg, #2b0d0d, #3d0a0a);
+            border: 2px solid #e74c3c;
+        }
+        .result-icon { font-size: 3rem; margin-bottom: 10px; }
+        .result-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+        .score-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 6px solid #4fc3f7;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 20px auto;
+            font-size: 2rem;
+            font-weight: 800;
+            color: #4fc3f7;
+            animation: scoreReveal 1s ease;
+        }
+        @keyframes scoreReveal {
+            from { transform: scale(0); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        @keyframes fadeInUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: #1a3a5c;
+            border-radius: 6px;
+            overflow: hidden;
+            margin: 16px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 1.5s ease;
+            background: linear-gradient(90deg, #e74c3c, #f39c12, #2ecc71);
+        }
+        .analysis-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
+        .analysis-safe {
+            background: rgba(46,204,113,0.1);
+            border: 1px solid rgba(46,204,113,0.3);
+        }
+        .analysis-unsafe {
+            background: rgba(231,76,60,0.1);
+            border: 1px solid rgba(231,76,60,0.3);
+        }
+        .suggestion-card {
+            background: #0d1929;
+            border: 1px solid #1a3a5c;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        .suggestion-card h4 { color: #4fc3f7; margin-bottom: 6px; }
+        .suggestion-card p { color: #aac8e0; font-size: 0.9rem; }
+        .disease-card {
+            background: rgba(231,76,60,0.08);
+            border: 1px solid rgba(231,76,60,0.25);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        .disease-card h4 { color: #e74c3c; margin-bottom: 6px; }
+        .disease-card p { color: #e0b0ae; font-size: 0.9rem; }
+        .news-card {
+            background: #0d1929;
+            border: 1px solid #1a3a5c;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        .news-card h4 { color: #cce8ff; font-size: 0.95rem; margin-bottom: 6px; }
+        .news-card p { color: #7ecfff; font-size: 0.8rem; }
+        .news-card a { color: #4fc3f7; font-size: 0.8rem; }
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: #3a6080;
+            font-size: 0.85rem;
+        }
+        footer span { color: #4fc3f7; }
+    </style>
+</head>
+<body>
+<section id="intro">
+    <div class="globe"></div>
+    <h1>💧 AquaSignal</h1>
+    <p>Global Water Safety Intelligence — Powered by Machine Learning</p>
+    <button class="scroll-btn"
+        onclick="document.getElementById('water-transition')
+        .scrollIntoView({behavior:'smooth'})">
+        Analyze Your Water ↓
+    </button>
+</section>
+
+<div id="water-transition">
+    <div class="water-wave"></div>
+    <div class="water-wave"></div>
+    <div class="wave-text">
+        🌊 Dirty water flows in — clean insights come out
+    </div>
+</div>
+
+<div id="app">
+    <div class="section-title">📊 WHO Safe Drinking Water Standards</div>
+    <table class="ref-table">
+        <tr><th>Parameter</th><th>Safe Range</th><th>Unit</th></tr>
+        <tr><td>Aluminium</td><td>0 – 0.2</td><td>mg/L</td></tr>
+        <tr><td>Ammonia</td><td>0 – 1.5</td><td>mg/L</td></tr>
+        <tr><td>Arsenic</td><td>0 – 0.01</td><td>mg/L</td></tr>
+        <tr><td>Barium</td><td>0 – 0.7</td><td>mg/L</td></tr>
+        <tr><td>Cadmium</td><td>0 – 0.003</td><td>mg/L</td></tr>
+        <tr><td>Chloramine</td><td>0 – 4</td><td>mg/L</td></tr>
+        <tr><td>Chromium</td><td>0 – 0.05</td><td>mg/L</td></tr>
+        <tr><td>Copper</td><td>0 – 2</td><td>mg/L</td></tr>
+        <tr><td>Flouride</td><td>0 – 1.5</td><td>mg/L</td></tr>
+        <tr><td>Bacteria</td><td>0</td><td>presence</td></tr>
+        <tr><td>Viruses</td><td>0</td><td>presence</td></tr>
+        <tr><td>Lead</td><td>0 – 0.01</td><td>mg/L</td></tr>
+        <tr><td>Nitrates</td><td>0 – 10</td><td>mg/L</td></tr>
+        <tr><td>Nitrites</td><td>0 – 1</td><td>mg/L</td></tr>
+        <tr><td>Mercury</td><td>0 – 0.006</td><td>mg/L</td></tr>
+        <tr><td>Perchlorate</td><td>0 – 56</td><td>μg/L</td></tr>
+        <tr><td>Radium</td><td>0 – 5</td><td>pCi/L</td></tr>
+        <tr><td>Selenium</td><td>0 – 0.04</td><td>mg/L</td></tr>
+        <tr><td>Silver</td><td>0 – 0.1</td><td>mg/L</td></tr>
+        <tr><td>Uranium</td><td>0 – 0.03</td><td>mg/L</td></tr>
+    </table>
+
+    <div class="section-title">🔬 Enter Water Parameters</div>
+    <p style="color:#7ecfff; margin-bottom:20px; font-size:0.9rem">
+        Use slider for quick input — type exact value for precision
+    </p>
+    <div id="params-container"></div>
+
+    <button id="analyze-btn" onclick="analyze()">
+        🔍 Analyze Water Safety
+    </button>
+</div>
+
+<div id="results-modal">
+    <div class="modal-container">
+        <button class="modal-close-btn"
+            onclick="closeResultsModal()">✕</button>
+        <div class="section-title" style="margin-top:0">
+            📋 Water Safety Report
+        </div>
+        <div id="result-card"></div>
+        <div class="section-title">🔬 Parameter Analysis</div>
+        <div id="param-analysis"></div>
+        <div class="section-title">💊 Purification Methods</div>
+        <div id="suggestions"></div>
+        <div class="section-title">⚠️ Health Risks</div>
+        <div id="diseases"></div>
+        <div class="section-title">📰 Latest Water News</div>
+        <div id="news-container"></div>
+    </div>
+</div>
+
+<footer>
+    Built with ❤️ by <span>KIRAN KUMAR </span> |
+    Trained on 7996 real global water samples |
+    Accuracy: 95.88% | Powered by Random Forest ML
+</footer>
+<script>
+const PARAMS = [
+    { key:'aluminium', label:'Aluminium', min:0, max:5, default:0.1, step:0.001, safeMin:0, safeMax:0.2, unit:'mg/L' },
+    { key:'ammonia', label:'Ammonia', min:0, max:50, default:0.5, step:0.01, safeMin:0, safeMax:1.5, unit:'mg/L' },
+    { key:'arsenic', label:'Arsenic', min:0, max:1, default:0.005, step:0.001, safeMin:0, safeMax:0.01, unit:'mg/L' },
+    { key:'barium', label:'Barium', min:0, max:10, default:0.3, step:0.01, safeMin:0, safeMax:0.7, unit:'mg/L' },
+    { key:'cadmium', label:'Cadmium', min:0, max:0.1, default:0.001, step:0.0001, safeMin:0, safeMax:0.003, unit:'mg/L' },
+    { key:'chloramine', label:'Chloramine', min:0, max:15, default:2, step:0.01, safeMin:0, safeMax:4, unit:'mg/L' },
+    { key:'chromium', label:'Chromium', min:0, max:1, default:0.02, step:0.001, safeMin:0, safeMax:0.05, unit:'mg/L' },
+    { key:'copper', label:'Copper', min:0, max:5, default:0.5, step:0.01, safeMin:0, safeMax:2, unit:'mg/L' },
+    { key:'flouride', label:'Flouride', min:0, max:5, default:0.5, step:0.01, safeMin:0, safeMax:1.5, unit:'mg/L' },
+    { key:'bacteria', label:'Bacteria', min:0, max:1, default:0, step:0.01, safeMin:0, safeMax:0, unit:'presence' },
+    { key:'viruses', label:'Viruses', min:0, max:1, default:0, step:0.01, safeMin:0, safeMax:0, unit:'presence' },
+    { key:'lead', label:'Lead', min:0, max:0.5, default:0.005, step:0.001, safeMin:0, safeMax:0.01, unit:'mg/L' },
+    { key:'nitrates', label:'Nitrates', min:0, max:50, default:5, step:0.01, safeMin:0, safeMax:10, unit:'mg/L' },
+    { key:'nitrites', label:'Nitrites', min:0, max:5, default:0.5, step:0.01, safeMin:0, safeMax:1, unit:'mg/L' },
+    { key:'mercury', label:'Mercury', min:0, max:0.1, default:0.001, step:0.0001, safeMin:0, safeMax:0.006, unit:'mg/L' },
+    { key:'perchlorate', label:'Perchlorate', min:0, max:200, default:20, step:0.1, safeMin:0, safeMax:56, unit:'μg/L' },
+    { key:'radium', label:'Radium', min:0, max:20, default:2, step:0.01, safeMin:0, safeMax:5, unit:'pCi/L' },
+    { key:'selenium', label:'Selenium', min:0, max:0.2, default:0.02, step:0.001, safeMin:0, safeMax:0.04, unit:'mg/L' },
+    { key:'silver', label:'Silver', min:0, max:0.5, default:0.05, step:0.001, safeMin:0, safeMax:0.1, unit:'mg/L' },
+    { key:'uranium', label:'Uranium', min:0, max:0.1, default:0.01, step:0.001, safeMin:0, safeMax:0.03, unit:'mg/L' }
+];
+
+const ISSUES = {
+    aluminium: { high: { disease:'Neurological damage, Alzheimer risk, bone disease', purify:'Coagulation-flocculation, reverse osmosis' }},
+    ammonia: { high: { disease:'Gastrointestinal irritation, toxic to aquatic life', purify:'Biological filtration, ion exchange, chlorination' }},
+    arsenic: { high: { disease:'Cancer (skin, lung, bladder), cardiovascular disease', purify:'Reverse osmosis, activated alumina filter' }},
+    barium: { high: { disease:'High blood pressure, kidney damage, heart rhythm issues', purify:'Reverse osmosis, ion exchange, distillation' }},
+    cadmium: { high: { disease:'Kidney damage, bone disease, cancer risk', purify:'Reverse osmosis, coagulation, lime softening' }},
+    chloramine: { high: { disease:'Skin irritation, respiratory issues, anemia in dialysis patients', purify:'Catalytic carbon filter, vitamin C neutralization' }},
+    chromium: { high: { disease:'Liver damage, cancer risk, allergic reactions', purify:'Reverse osmosis, activated carbon, ion exchange' }},
+    copper: { high: { disease:'Nausea, liver damage, Wilson disease risk', purify:'Reverse osmosis, activated carbon filter' }},
+    flouride: { high: { disease:'Dental and skeletal fluorosis, joint pain', purify:'Activated alumina, reverse osmosis, distillation' }},
+    bacteria: { high: { disease:'Cholera, typhoid, dysentery, gastroenteritis', purify:'Boiling, UV disinfection, chlorination' }},
+    viruses: { high: { disease:'Hepatitis A, polio, rotavirus, norovirus', purify:'UV disinfection, boiling, microfiltration' }},
+    lead: { high: { disease:'Brain damage in children, kidney failure, hypertension', purify:'Reverse osmosis, distillation, certified lead filters' }},
+    nitrates: { high: { disease:'Blue baby syndrome in infants, thyroid issues', purify:'Reverse osmosis, ion exchange, distillation' }},
+    nitrites: { high: { disease:'Methemoglobinemia, oxygen deprivation in blood', purify:'Reverse osmosis, ion exchange' }},
+    mercury: { high: { disease:'Neurological damage, kidney failure, birth defects', purify:'Activated carbon, reverse osmosis, distillation' }},
+    perchlorate: { high: { disease:'Thyroid disruption, developmental issues in children', purify:'Ion exchange, reverse osmosis, biological treatment' }},
+    radium: { high: { disease:'Bone cancer, leukemia, radiation poisoning', purify:'Ion exchange, reverse osmosis, lime softening' }},
+    selenium: { high: { disease:'Selenosis, hair loss, nerve damage, cirrhosis', purify:'Reverse osmosis, activated alumina, distillation' }},
+    silver: { high: { disease:'Argyria (skin discoloration), kidney and liver damage', purify:'Reverse osmosis, activated carbon' }},
+    uranium: { high: { disease:'Kidney toxicity, radiation exposure, cancer risk', purify:'Reverse osmosis, ion exchange, lime softening' }}
+};
+
+const container = document.getElementById('params-container');
+PARAMS.forEach(p => {
+    container.innerHTML += `
+    <div class="param-card">
+        <div class="param-header">
+            <span class="param-name">${p.label} (${p.unit})</span>
+            <span class="safe-range">Safe: ≤${p.safeMax}</span>
+        </div>
+        <div class="slider-row">
+            <input type="range"
+                id="slider_${p.key}"
+                min="${p.min}" max="${p.max}"
+                value="${p.default}" step="${p.step}"
+                oninput="syncFromSlider('${p.key}')">
+            <input type="number"
+                id="num_${p.key}"
+                min="${p.min}" max="${p.max}"
+                value="${p.default}" step="${p.step}"
+                oninput="syncFromNumber('${p.key}')">
+        </div>
+        <div class="param-status" id="status_${p.key}"></div>
+    </div>`;
+});
+
+PARAMS.forEach(p => updateStatus(p.key));
+
+function syncFromSlider(key) {
+    const p = PARAMS.find(x => x.key === key);
+    const val = parseFloat(document.getElementById('slider_'+key).value);
+    document.getElementById('num_'+key).value = val.toFixed(countDecimals(p.step));
+    updateStatus(key);
+}
+
+function syncFromNumber(key) {
+    const p = PARAMS.find(x => x.key === key);
+    let val = parseFloat(document.getElementById('num_'+key).value);
+    if (isNaN(val)) return;
+    val = Math.min(Math.max(val, p.min), p.max);
+    document.getElementById('slider_'+key).value = val;
+    document.getElementById('num_'+key).value = val.toFixed(countDecimals(p.step));
+    updateStatus(key);
+}
+
+function countDecimals(step) {
+    if (Math.floor(step) === step) return 0;
+    return step.toString().split('.')[1].length || 0;
+}
+
+function updateStatus(key) {
+    const p = PARAMS.find(x => x.key === key);
+    const val = parseFloat(document.getElementById('num_'+key).value);
+    const el = document.getElementById('status_'+key);
+    if (val > p.safeMax) {
+        el.innerHTML = `<span style="color:#e74c3c">⚠️ Above safe limit (≤${p.safeMax})</span>`;
+    } else {
+        el.innerHTML = `<span style="color:#2ecc71">✅ Within safe range</span>`;
+    }
+}
+
+function getValues() {
+    return PARAMS.map(p => parseFloat(document.getElementById('num_'+p.key).value));
+}
+
+function openResultsModal() {
+    document.getElementById('results-modal').style.display = 'block';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeResultsModal() {
+    document.getElementById('results-modal').style.display = 'none';
+    document.body.style.overflow = '';
+}
+
+window.addEventListener('click', function(e) {
+    if (e.target === document.getElementById('results-modal')) closeResultsModal();
+});
+
+window.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeResultsModal();
+});
+
+function predictScore(vals) {
+    const weights = [0.12,0.06,0.08,0.05,0.07,0.06,0.05,0.04,0.04,0.08,0.08,0.08,0.05,0.05,0.07,0.03,0.03,0.03,0.03,0.04];
+    let violations = 0;
+    let total = 0;
+    PARAMS.forEach((p, i) => {
+        total += weights[i];
+        if (vals[i] > p.safeMax) violations += weights[i];
+    });
+    return Math.round((1 - violations/total) * 100);
+}
+
+function analyze() {
+    const vals = getValues();
+    const btn = document.getElementById('analyze-btn');
+    btn.textContent = '⏳ Analyzing...';
+    btn.disabled = true;
+    setTimeout(() => {
+        const score = predictScore(vals);
+        showResults(score, vals);
+        btn.textContent = '🔍 Analyze Water Safety';
+        btn.disabled = false;
+    }, 1200);
+}
+
+function showResults(score, vals) {
+    const safe = score >= 60;
+    document.getElementById('result-card').innerHTML = `
+        <div class="result-card ${safe ? 'result-safe' : 'result-unsafe'}">
+            <div class="result-icon">${safe ? '✅' : '❌'}</div>
+            <div class="result-title" style="color:${safe ? '#2ecc71' : '#e74c3c'}">
+                ${safe ? 'SAFE — Safe to drink' : 'UNSAFE — Do not drink'}
+            </div>
+            <div class="score-circle">
+                ${score}<small style="font-size:0.5em">/100</small>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width:${score}%"></div>
+            </div>
+            <p style="color:#aac8e0; margin-top:8px">
+                ${score>=70 ? '🟢 Good quality water' : score>=40 ? '🟡 Borderline — treat before drinking' : '🔴 Poor quality — do not drink'}
+            </p>
+        </div>`;
+
+    let analysisHTML = '';
+    PARAMS.forEach((p, i) => {
+        const val = vals[i];
+        const ok = val <= p.safeMax;
+        analysisHTML += `
+        <div class="analysis-item ${ok ? 'analysis-safe' : 'analysis-unsafe'}">
+            <span>${ok ? '✅' : '⚠️'}</span>
+            <span><strong>${p.label}:</strong> ${val} ${p.unit}
+            ${ok ? '— Within safe range' : `— Exceeds limit (≤${p.safeMax})`}</span>
+        </div>`;
+    });
+    document.getElementById('param-analysis').innerHTML = analysisHTML;
+
+    let suggestHTML = '';
+    let diseaseHTML = '';
+    PARAMS.forEach((p, i) => {
+        const val = vals[i];
+        const issue = ISSUES[p.key];
+        if (!issue) return;
+        if (val > p.safeMax && issue.high) {
+            suggestHTML += `<div class="suggestion-card">
+                <h4>💧 ${p.label} too high</h4>
+                <p>${issue.high.purify}</p></div>`;
+            diseaseHTML += `<div class="disease-card">
+                <h4>⚠️ ${p.label} Risk</h4>
+                <p>${issue.high.disease}</p></div>`;
+        }
+    });
+
+    document.getElementById('suggestions').innerHTML =
+        suggestHTML || '<p style="color:#4fc3f7">✅ No purification needed</p>';
+    document.getElementById('diseases').innerHTML =
+        diseaseHTML || '<p style="color:#2ecc71">✅ No significant health risks detected</p>';
+
+    loadNews();
+    openResultsModal();
+}
+
+async function loadNews() {
+    const el = document.getElementById('news-container');
+    el.innerHTML = '<p style="color:#4fc3f7">Loading latest water news...</p>';
+    const rss = 'https://api.rss2json.com/v1/api.json?rss_url=' +
+        encodeURIComponent('https://news.google.com/rss/search?q=water+quality+safety&hl=en-US&gl=US&ceid=US:en');
+    try {
+        const res = await fetch(rss);
+        const data = await res.json();
+        if (data.items && data.items.length > 0) {
+            el.innerHTML = data.items.slice(0,5).map(item => `
+            <div class="news-card">
+                <h4>${item.title}</h4>
+                <p>${new Date(item.pubDate).toDateString()}</p>
+                <a href="${item.link}" target="_blank">Read more →</a>
+            </div>`).join('');
+        } else {
+            el.innerHTML = '<p style="color:#7ecfff">No recent news found.</p>';
+        }
+    } catch {
+        el.innerHTML = '<p style="color:#7ecfff">News unavailable right now.</p>';
+    }
+}
+</script>
+</body>
+</html>
