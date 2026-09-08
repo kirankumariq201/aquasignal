@@ -1,4 +1,4 @@
-🌐 Live App: https://aquasignal-udcnfbh9dysbpqmt42l9ya.streamlit.app/
+🌐 Live App: https://kirankumariq201.github.io/aquasignal/
 # aquasignal
 AI-powered water quality risk predictor — explains why water is unsafe, tracks global trends, and gives actionable insights for anyone on Earth.
 
