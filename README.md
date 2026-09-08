@@ -22,7 +22,7 @@ it causes harm.
 ## 🤝 Collaborations Welcome
 Open to partnerships with NGOs, water 
 organizations, and researchers worldwide.
-Contact: [your email]
+Contact: kirankumar1116t@gmail.com
 🌐 Live App: https://kirankumariq201.github.io/aquasignal/
 # aquasignal
 AI-powered water quality risk predictor — explains why water is unsafe, tracks global trends, and gives actionable insights for anyone on Earth.
