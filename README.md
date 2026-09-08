@@ -1,3 +1,28 @@
+## 🌍 Impact
+
+> 2.2 billion people lack access to safe 
+> drinking water — WHO 2024
+
+AquaSignal is a free, open-source tool 
+designed to help communities, researchers, 
+and organizations detect unsafe water before 
+it causes harm.
+
+## 📊 Model Performance
+
+| Version | Data | Accuracy |
+|---|---|---|
+| V1 | Synthetic | 65.09% |
+| V2 | Real World | 94.00% |
+| V3 | Cost-Sensitive | 95.88% |
+
+## 🔗 Live Demo
+👉 https://kirankumariq201.github.io/aquasignal/
+
+## 🤝 Collaborations Welcome
+Open to partnerships with NGOs, water 
+organizations, and researchers worldwide.
+Contact: [your email]
 🌐 Live App: https://kirankumariq201.github.io/aquasignal/
 # aquasignal
 AI-powered water quality risk predictor — explains why water is unsafe, tracks global trends, and gives actionable insights for anyone on Earth.
