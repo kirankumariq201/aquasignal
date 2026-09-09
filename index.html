@@ -558,24 +558,32 @@ PARAMS.forEach(p => updateStatus(p.key));
 
 function syncFromSlider(key) {
     const p = PARAMS.find(x => x.key === key);
-    const val = parseFloat(document.getElementById('slider_'+key).value);
-    document.getElementById('num_'+key).value = val.toFixed(countDecimals(p.step));
+    const val = parseFloat(
+        document.getElementById('slider_'+key).value);
+    const decimals = countDecimals(p.step);
+    const numInput = document.getElementById('num_'+key);
+    numInput.value = val.toFixed(decimals);
     updateStatus(key);
 }
 
 function syncFromNumber(key) {
     const p = PARAMS.find(x => x.key === key);
-    let val = parseFloat(document.getElementById('num_'+key).value);
-    if (isNaN(val)) return;
+    const numInput = document.getElementById('num_'+key);
+    const sliderInput = document.getElementById('slider_'+key);
+    let val = parseFloat(numInput.value);
+    if (isNaN(val) || numInput.value === '') return;
     val = Math.min(Math.max(val, p.min), p.max);
-    document.getElementById('slider_'+key).value = val;
-    document.getElementById('num_'+key).value = val.toFixed(countDecimals(p.step));
+    const decimals = countDecimals(p.step);
+    numInput.value = val.toFixed(decimals);
+    sliderInput.value = val;
     updateStatus(key);
 }
 
 function countDecimals(step) {
     if (Math.floor(step) === step) return 0;
-    return step.toString().split('.')[1].length || 0;
+    const str = step.toString();
+    if (str.indexOf('.') === -1) return 0;
+    return str.split('.')[1].length;
 }
 
 function updateStatus(key) {
