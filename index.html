@@ -130,11 +130,11 @@
         }
 
         .wave-1 {
-            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 180'%3E%3Cpath fill='%231565c0' fill-opacity='0.35' d='M0,90 C360,180 720,0 1080,90 C1260,135 1350,70 1440,90 L1440,180 L0,180 Z'/%3E%3C/svg%3E") repeat-x;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 180'%3E%3Cpath fill='%231565c0' fill-opacity='0.35' d='M0,90 C360,180 720,0 1080,90 C12[...]
         }
 
         .wave-2 {
-            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 180'%3E%3Cpath fill='%234fc3f7' fill-opacity='0.2' d='M0,70 C400,150 800,10 1200,80 C1320,110 1380,50 1440,70 L1440,180 L0,180 Z'/%3E%3C/svg%3E") repeat-x;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 180'%3E%3Cpath fill='%234fc3f7' fill-opacity='0.2' d='M0,70 C400,150 800,10 1200,80 C13[...]
             animation-direction: reverse;
             animation-duration: 7s;
         }
@@ -802,10 +802,10 @@ function onSlider(key) {
 function onNumber(key) {
     const p = PARAMS.find(x => x.key === key);
     const raw = document.getElementById('num_'+key).value;
-    // Allow typing freely - only update slider if valid number
     const val = parseFloat(raw);
-    if (!isNaN(val) && val >= p.min && val <= p.max) {
-        document.getElementById('slider_'+key).value = val;
+    if (!isNaN(val)) {
+        const clamped = Math.min(Math.max(val, p.min), p.max);
+        document.getElementById('slider_'+key).value = clamped;
         refreshStatus(key);
     }
 }
@@ -981,4 +981,3 @@ async function loadNews() {
 </script>
 </body>
 </html>
-
