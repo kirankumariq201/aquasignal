@@ -751,13 +751,13 @@ const ISSUES = {
     perchlorate:{high:{disease:'Thyroid hormone disruption, developmental issues in children',purify:'Ion exchange, reverse osmosis, biological perchlorate reduction'}},
     radium:{high:{disease:'Bone cancer, leukemia, radiation exposure',purify:'Ion exchange, reverse osmosis, lime softening'}},
     selenium:{high:{disease:'Selenosis: hair loss, nerve damage, liver cirrhosis',purify:'Reverse osmosis, activated alumina, distillation'}},
-    silver:{high:{disease:'Argyria — permanent skin discoloration, kidney and liver stress',purify:'Reverse osmosis, activated carbon filtration'}},
+    silver:{high:{disease:'Argyria permanent skin discoloration, kidney and liver stress',purify:'Reverse osmosis, activated carbon filtration'}},
     uranium:{high:{disease:'Kidney toxicity, radiation exposure risk, DNA damage',purify:'Reverse osmosis, ion exchange, lime softening'}}
 };
-// ── BUILD PARAM CARDS ──
+
+// BUILD CARDS
 const container = document.getElementById('params-container');
 PARAMS.forEach(p => {
-    const dec = countDecimals(p.step);
     container.innerHTML += `
     <div class="param-card" id="card_${p.key}">
         <div class="param-header">
@@ -767,19 +767,18 @@ PARAMS.forEach(p => {
         <div class="input-row">
             <input type="range"
                 id="slider_${p.key}"
-                min="${p.min}" max="${p.max}"
-                value="${p.def}" step="${p.step}"
+                min="${p.min}"
+                max="${p.max}"
+                value="${p.def}"
+                step="${p.step}"
                 oninput="onSlider('${p.key}')">
-            <input type="number"
+            <input type="text"
                 id="num_${p.key}"
                 class="num-box"
-                min="${p.min}" max="${p.max}"
-                value="${p.def.toFixed(dec)}"
-                step="${p.step}"
+                value="${p.def}"
                 inputmode="decimal"
                 oninput="onNumber('${p.key}')"
-                onchange="onNumber('${p.key}')"
-                onblur="onNumber('${p.key}')">
+                onblur="onBlur('${p.key}')">
         </div>
         <div class="param-status" id="status_${p.key}"></div>
     </div>`;
@@ -787,7 +786,6 @@ PARAMS.forEach(p => {
 
 PARAMS.forEach(p => refreshStatus(p.key));
 
-// ── SYNC FUNCTIONS (FIXED) ──
 function countDecimals(n) {
     const s = n.toString();
     return s.includes('.') ? s.split('.')[1].length : 0;
@@ -803,39 +801,53 @@ function onSlider(key) {
 
 function onNumber(key) {
     const p = PARAMS.find(x => x.key === key);
+    const raw = document.getElementById('num_'+key).value;
+    // Allow typing freely - only update slider if valid number
+    const val = parseFloat(raw);
+    if (!isNaN(val) && val >= p.min && val <= p.max) {
+        document.getElementById('slider_'+key).value = val;
+        refreshStatus(key);
+    }
+}
+
+function onBlur(key) {
+    const p = PARAMS.find(x => x.key === key);
     const dec = countDecimals(p.step);
     const raw = document.getElementById('num_'+key).value;
-    if (raw === '' || raw === '-') return;
     let val = parseFloat(raw);
-    if (isNaN(val)) return;
+    if (isNaN(val)) val = p.def;
     val = Math.min(Math.max(val, p.min), p.max);
     document.getElementById('num_'+key).value = val.toFixed(dec);
     document.getElementById('slider_'+key).value = val;
     refreshStatus(key);
 }
+
 function refreshStatus(key) {
     const p = PARAMS.find(x => x.key === key);
-    const val = parseFloat(document.getElementById('num_'+key).value);
+    const raw = document.getElementById('num_'+key).value;
+    const val = parseFloat(raw);
     const card = document.getElementById('card_'+key);
     const status = document.getElementById('status_'+key);
-    const over = val > p.safeMax;
+    const over = !isNaN(val) && val > p.safeMax;
     card.classList.toggle('warning', over);
     status.innerHTML = over
-        ? `<span style="color:#e74c3c">⚠ Exceeds safe limit — current: ${val} | limit: ≤${p.safeMax}</span>`
+        ? `<span style="color:#e74c3c">⚠ Exceeds limit — current: ${val} | limit: ≤${p.safeMax}</span>`
         : `<span style="color:#2ecc71">✓ Within safe range</span>`;
 }
 
 function getVals() {
-    return PARAMS.map(p => parseFloat(document.getElementById('num_'+p.key).value));
+    return PARAMS.map(p => {
+        const raw = document.getElementById('num_'+p.key).value;
+        const val = parseFloat(raw);
+        return isNaN(val) ? p.def : val;
+    });
 }
 
-// ── SCROLL ──
 function scrollToApp() {
     document.getElementById('wave-section')
         .scrollIntoView({behavior:'smooth'});
 }
 
-// ── OPEN / CLOSE RESULT SCREEN ──
 function openResult() {
     const screen = document.getElementById('result-screen');
     screen.style.display = 'block';
@@ -848,7 +860,6 @@ function closeResult() {
     document.body.style.overflow = '';
 }
 
-// ── SCORE ──
 function calcScore(vals) {
     const w = [0.12,0.06,0.08,0.05,0.07,0.06,0.05,0.04,
                0.04,0.08,0.08,0.08,0.05,0.05,0.07,0.03,
@@ -861,13 +872,11 @@ function calcScore(vals) {
     return Math.round((1 - viol/total) * 100);
 }
 
-// ── ANALYZE ──
 function analyze() {
     const vals = getVals();
     const btn = document.getElementById('analyze-btn');
     btn.textContent = '⏳ Analyzing...';
     btn.disabled = true;
-
     setTimeout(() => {
         const score = calcScore(vals);
         renderResult(score, vals);
@@ -877,7 +886,7 @@ function analyze() {
         btn.disabled = false;
     }, 1000);
 }
-// ── RENDER RESULT ──
+
 function renderResult(score, vals) {
     const safe = score >= 60;
     const chip = score >= 70
@@ -887,10 +896,10 @@ function renderResult(score, vals) {
         : '<span class="verdict-chip chip-bad">🔴 Poor quality — do not drink</span>';
 
     document.getElementById('result-hero').innerHTML = `
-    <div class="result-hero ${safe ? 'hero-safe' : 'hero-unsafe'}">
-        <div class="hero-icon">${safe ? '✅' : '❌'}</div>
+    <div class="result-hero ${safe?'hero-safe':'hero-unsafe'}">
+        <div class="hero-icon">${safe?'✅':'❌'}</div>
         <div class="hero-title" style="color:${safe?'#2ecc71':'#e74c3c'}">
-            ${safe ? 'SAFE TO DRINK' : 'UNSAFE — DO NOT DRINK'}
+            ${safe?'SAFE TO DRINK':'UNSAFE — DO NOT DRINK'}
         </div>
         <div class="hero-sub">Based on WHO drinking water standards</div>
         <div class="score-ring ${safe?'safe':'unsafe'}">
@@ -903,13 +912,11 @@ function renderResult(score, vals) {
         ${chip}
     </div>`;
 
-    // Animate progress bar
     setTimeout(() => {
         const prog = document.getElementById('prog');
         if (prog) prog.style.width = score + '%';
     }, 100);
 
-    // Parameter analysis
     let aHTML = '';
     PARAMS.forEach((p,i) => {
         const v = vals[i];
@@ -919,31 +926,35 @@ function renderResult(score, vals) {
             <div class="a-icon">${ok?'✅':'⚠️'}</div>
             <div class="a-text">
                 <strong>${p.label}:</strong>
-                <span>${v} ${p.unit} — ${ok?'Within safe range':'Exceeds limit (≤'+p.safeMax+')'}</span>
+                <span>${v} ${p.unit} — 
+                ${ok?'Within safe range':'Exceeds limit (≤'+p.safeMax+')'}
+                </span>
             </div>
         </div>`;
     });
     document.getElementById('param-analysis').innerHTML = aHTML;
 
-    // Suggestions + diseases
     let sHTML = '', dHTML = '';
     PARAMS.forEach((p,i) => {
         const v = vals[i];
         const issue = ISSUES[p.key];
         if (!issue) return;
         if (v > p.safeMax && issue.high) {
-            sHTML += `<div class="s-card"><h4>💧 ${p.label} too high (${v} ${p.unit})</h4><p>${issue.high.purify}</p></div>`;
-            dHTML += `<div class="d-card"><h4>⚠️ ${p.label} Health Risk</h4><p>${issue.high.disease}</p></div>`;
+            sHTML += `<div class="s-card">
+                <h4>💧 ${p.label} too high (${v} ${p.unit})</h4>
+                <p>${issue.high.purify}</p></div>`;
+            dHTML += `<div class="d-card">
+                <h4>⚠️ ${p.label} Health Risk</h4>
+                <p>${issue.high.disease}</p></div>`;
         }
     });
 
     document.getElementById('suggestions').innerHTML =
-        sHTML || '<p style="color:#2ecc71">✅ No purification needed — all parameters within WHO safe limits</p>';
+        sHTML || '<p style="color:#2ecc71">✅ No purification needed</p>';
     document.getElementById('diseases').innerHTML =
-        dHTML || '<p style="color:#2ecc71">✅ No significant health risks detected for these parameter levels</p>';
+        dHTML || '<p style="color:#2ecc71">✅ No significant health risks detected</p>';
 }
 
-// ── NEWS ──
 async function loadNews() {
     const el = document.getElementById('news-container');
     el.innerHTML = '<p style="color:#4a6a80">Fetching latest water news...</p>';
@@ -957,15 +968,16 @@ async function loadNews() {
             <div class="news-card">
                 <h4>${item.title}</h4>
                 <p>${new Date(item.pubDate).toDateString()}</p>
-                <a href="${item.link}" target="_blank" rel="noopener">Read full story →</a>
+                <a href="${item.link}" target="_blank" rel="noopener">
+                    Read full story →</a>
             </div>`).join('');
         } else {
             el.innerHTML = '<p style="color:#4a6a80">No recent news found.</p>';
         }
     } catch {
-        el.innerHTML = '<p style="color:#4a6a80">News feed unavailable right now.</p>';
+        el.innerHTML = '<p style="color:#4a6a80">News unavailable right now.</p>';
     }
-}
+        }
 </script>
 </body>
 </html>
